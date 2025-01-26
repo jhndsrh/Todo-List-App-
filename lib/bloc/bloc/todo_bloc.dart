@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+
 import 'package:meta/meta.dart';
 import 'package:todo_app/model/todo_model.dart';
 import 'package:todo_app/repository/todo_repository.dart';
@@ -45,6 +46,28 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
           final todos = await _repository.getTodos();
           emit(TodoLoaded(todos: todos));
         }
+      } catch (e) {
+        emit(TodoError(message: e.toString()));
+      }
+    });
+
+    on<UpdateTodoEvent>((event, emit) async {
+      emit(TodoLoading());
+      try {
+        await _repository.updateTodo(event.id, event.updatedTodo);
+        add(FetchTodoEvent());
+      } catch (e) {
+        emit(TodoError(message: e.toString()));
+      }
+    });
+
+    on<DeleteTodoEvent>((event, emit) async {
+      emit(TodoLoading());
+      try {
+        await _repository.deleteTodo(
+          event.id,
+        );
+        add(FetchTodoEvent());
       } catch (e) {
         emit(TodoError(message: e.toString()));
       }

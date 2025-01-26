@@ -16,14 +16,17 @@ class AddTodoEvent extends TodoEvent {
   }
 }
 
-class ToggleTodo extends TodoEvent {
-  final int index;
+class UpdateTodoEvent extends TodoEvent {
+  final String id;
+  final Item updatedTodo;
 
-  ToggleTodo({required this.index});
+  UpdateTodoEvent({required this.id, required this.updatedTodo});
 }
 
-class DeleteTodo extends TodoEvent {
-  final int index;
+class DeleteTodoEvent extends TodoEvent {
+  final String id;
 
-  DeleteTodo({required this.index});
+  DeleteTodoEvent({
+    required this.id,
+  });
 }

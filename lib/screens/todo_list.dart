@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:todo_app/bloc/bloc/todo_bloc.dart';
+import 'package:todo_app/model/todo_model.dart';
 import 'package:todo_app/screens/add_page.dart';
+import 'package:todo_app/screens/edit_page.dart';
 
 class TodoListPage extends StatefulWidget {
   const TodoListPage({super.key});
@@ -14,10 +16,10 @@ class _TodoListPageState extends State<TodoListPage> {
   @override
   void initState() {
     super.initState();
-    // Memastikan konteks berada dalam hierarki BlocProvider
+
     context.read<TodoBloc>().add(FetchTodoEvent());
     final bloc = BlocProvider.of<TodoBloc>(context, listen: false);
-    print('Bloc instance: $bloc'); // Log instance Bloc, pastikan valid
+    print('Bloc instance: $bloc');
   }
 
   @override
@@ -37,6 +39,20 @@ class _TodoListPageState extends State<TodoListPage> {
               itemBuilder: (context, index) {
                 final todo = todos[index];
                 return ListTile(
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (value) =>
+                        _onSelectedPopup(context, todo, value),
+                    itemBuilder: (BuildContext context) => [
+                      PopupMenuItem(
+                        value: 'Edit',
+                        child: Text('Edit'),
+                      ),
+                      PopupMenuItem(
+                        value: 'Delete',
+                        child: Text('Delete'),
+                      ),
+                    ],
+                  ),
                   title: Text(todo.title.isNotEmpty ? todo.title : "Untitled"),
                   subtitle: Text(todo.description.isNotEmpty
                       ? todo.description
@@ -73,5 +89,51 @@ class _TodoListPageState extends State<TodoListPage> {
         ),
       ),
     );
+  }
+
+  void _onSelectedPopup(BuildContext context, Item todo, String value) {
+    if (value == 'Edit') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EditTodoPage(todo: todo),
+        ),
+      );
+    } else if (value == 'Delete') {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Confirm Delete'),
+            content: Text('Are you sure you want to delete this todo?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  // context.read<TodoBloc>().add(DeleteTodoEvent(id: todo.id));
+                  // Navigator.pop(context);
+
+                  // Add error handling
+                  try {
+                    context.read<TodoBloc>().add(DeleteTodoEvent(id: todo.id));
+                    Navigator.pop(context);
+                  } catch (error) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error deleting todo: $error'),
+                      ),
+                    );
+                  }
+                },
+                child: const Text('Delete'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 }
